@@ -5,12 +5,7 @@ import java.io.FileInputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
 
-import javax.microedition.io.Connection;
-import javax.microedition.io.Connector;
 import javax.microedition.io.StreamConnection;
-import javax.obex.ClientSession;
-import javax.obex.HeaderSet;
-import javax.obex.Operation;
 
 public class ProcessConnectionThread implements Runnable {
 
@@ -48,39 +43,26 @@ public class ProcessConnectionThread implements Runnable {
 		return "0023125C3B07";
 	}
 
+	/**
+	 * read in a file stream, then push it to the output stream cannot use OBEX
+	 * because Android doesn't have a quick OBEX solution so we're going to use
+	 * the raw stream writer instead
+	 */
 	private void pushImage() {
 		try {
-			FileInputStream stream = new FileInputStream(
-					"/Users/tdoan/Documents/workspace_eclipse/BluetoothServer/images/tree.jpg");
-			File file = new File(
-					"/Users/tdoan/Documents/workspace_eclipse/BluetoothServer/images/tree.jpg");
+			String filePath = "/Users/tdoan/Documents/workspace_eclipse/BluetoothServer/images/tree.jpg";
+
+			FileInputStream fileStream = new FileInputStream(filePath);
+			File file = new File(filePath);
 			int size = (int) file.length();
 			byte[] fileArray = new byte[size];
-			stream.read(fileArray);
-			stream.close();
 
-			String btConnectionURL = "btgoep://40:B0:FA:20:0B:F2" + ":9";
-			Connection connection = Connector.open(btConnectionURL);
-			ClientSession clientSession = (ClientSession) connection;
-			HeaderSet headerSet = clientSession.createHeaderSet();
+			fileStream.read(fileArray);
+			fileStream.close();
 
-			clientSession.connect(headerSet);
-
-			headerSet.setHeader(HeaderSet.NAME, "tree.jpg");
-			headerSet.setHeader(HeaderSet.TYPE, "image/jpeg");
-
-			// set file length
-			headerSet.setHeader(HeaderSet.LENGTH, size);
-
-			Operation putOperation = clientSession.put(headerSet);
-
-			OutputStream outputStream = putOperation.openOutputStream();
+			OutputStream outputStream = mConnection.openOutputStream();
 			outputStream.write(fileArray);
-
 			outputStream.close();
-			putOperation.close();
-
-			clientSession.disconnect(null);
 
 		} catch (Exception e) {
 			System.out.println(e.getMessage());
