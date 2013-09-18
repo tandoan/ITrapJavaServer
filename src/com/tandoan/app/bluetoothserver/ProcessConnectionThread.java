@@ -1,9 +1,9 @@
 package com.tandoan.app.bluetoothserver;
 
+import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
-import java.io.OutputStream;
 
 import javax.microedition.io.StreamConnection;
 
@@ -49,6 +49,8 @@ public class ProcessConnectionThread implements Runnable {
 	 * the raw stream writer instead
 	 */
 	private void pushImage() {
+		System.out.println("pushing file");
+
 		try {
 			String filePath = "/Users/tdoan/Documents/workspace_eclipse/BluetoothServer/images/tree.jpg";
 
@@ -56,17 +58,22 @@ public class ProcessConnectionThread implements Runnable {
 			File file = new File(filePath);
 			int size = (int) file.length();
 			byte[] fileArray = new byte[size];
-
 			fileStream.read(fileArray);
 			fileStream.close();
 
-			OutputStream outputStream = mConnection.openOutputStream();
+			DataOutputStream outputStream = mConnection.openDataOutputStream();
+			byte[] nameInBytes = "tree.jpg".getBytes("UTF-8");
+			outputStream.writeInt(nameInBytes.length);
+			outputStream.write(nameInBytes);
+			outputStream.writeInt(size);
 			outputStream.write(fileArray);
+			outputStream.flush();
 			outputStream.close();
 
 		} catch (Exception e) {
 			System.out.println(e.getMessage());
 		}
+		System.out.println("file pushed");
 
 	}
 
